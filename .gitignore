@@ -60,3 +60,10 @@ target/
 
 #Ipython Notebook
 .ipynb_checkpoints
+
+#Project Specific
+test.jpg
+test-calibration.jpg
+test.tif
+test.tiff
+output
