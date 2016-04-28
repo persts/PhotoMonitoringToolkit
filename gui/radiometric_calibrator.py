@@ -22,7 +22,7 @@ from PyQt5 import QtCore, QtGui
 from pmt import RadiometricCalibrator
 
 class RadiometricCalibratorQt(QtCore.QObject, RadiometricCalibrator):
-	modelCreated = QtCore.pyqtSignal(dict)
+	modelCreated = QtCore.pyqtSignal(list)
 	pixmapCreated = QtCore.pyqtSignal(QtGui.QPixmap)
 	roisLoaded = QtCore.pyqtSignal(list)
 

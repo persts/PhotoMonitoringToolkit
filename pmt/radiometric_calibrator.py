@@ -40,11 +40,8 @@ class RadiometricCalibrator():
 		if self.model == None:
 			return theImage
 		image = self.preprocessPixels(theImage)
-		bands = np.split(image, 3, axis=2)
-		bands[0] = (self.model['1']['slope'] * bands[0]) + self.model['1']['intercept']
-		bands[1] = (self.model['2']['slope'] * bands[1]) + self.model['2']['intercept']
-		bands[2] = (self.model['3']['slope'] * bands[2]) + self.model['3']['intercept']
-		image = np.dstack(bands)
+		for band in range(3):
+			image[:,:,band] = (self.model[band]['slope'] * image[:,:,band]) + self.model[band]['intercept']
 		image[ image < 0] = 0.0
 		image[ image > 1.0] = 1.0
 		return image
@@ -52,22 +49,18 @@ class RadiometricCalibrator():
 	def generateModel(self):
 		#TODO: Make model dynamic in size for > 3 bands -- based on bands or mode?
 		if len(self.rois) > 1:
-			self.model = {'1': {'data': {'x': [], 'y': []}, 'slope': 0, 'intercept': 0, 'r-value': 0}, '2': {'data': {'x': [], 'y': []}, 'slope': 0, 'intercept': 0, 'r-value': 0}, '3': {'data': {'x': [], 'y': []}, 'slope': 0, 'intercept': 0, 'r-value': 0}}
+			self.model = [{'data': {'x': [], 'y': []}, 'slope': 0, 'intercept': 0, 'r-value': 0}, {'data': {'x': [], 'y': []}, 'slope': 0, 'intercept': 0, 'r-value': 0}, {'data': {'x': [], 'y': []}, 'slope': 0, 'intercept': 0, 'r-value': 0}]
 			for roi in self.rois:
 				#If the width is not 0 we have means for the roi, so process
 				if roi[2][2] != 0:
 					array = np.reshape(np.array(roi[3]), (1,1,3))
 					stack = self.preprocessPixels(array)
-					self.model['1']['data']['x'].append(stack[0,0,0]) #X: pixel mean
-					self.model['1']['data']['y'].append(roi[1][0]) #Y: calibration
-					self.model['2']['data']['x'].append(stack[0,0,1])
-					self.model['2']['data']['y'].append(roi[1][1])
-					self.model['3']['data']['x'].append(stack[0,0,2])
-					self.model['3']['data']['y'].append(roi[1][2])
-			if len(self.model['1']['data']['x']) > 1:
-				self.model['1']['slope'], self.model['1']['intercept'], self.model['1']['r-value'], _, _ = LinearRegression(self.model['1']['data']['x'], self.model['1']['data']['y'])
-				self.model['2']['slope'], self.model['2']['intercept'], self.model['2']['r-value'], _, _ = LinearRegression(self.model['2']['data']['x'], self.model['2']['data']['y'])
-				self.model['3']['slope'], self.model['3']['intercept'], self.model['3']['r-value'], _, _ = LinearRegression(self.model['3']['data']['x'], self.model['3']['data']['y'])
+					for band in range(3):
+						self.model[band]['data']['x'].append(stack[0,0,band]) #X: pixel mean
+						self.model[band]['data']['y'].append(roi[1][band]) #Y: calibration
+			if len(self.model[0]['data']['x']) > 1:
+				for band in range(3):
+					self.model[band]['slope'], self.model[band]['intercept'], self.model[band]['r-value'], _, _ = LinearRegression(self.model[band]['data']['x'], self.model[band]['data']['y'])
 				return True
 		return False
 
@@ -116,9 +109,7 @@ class RadiometricCalibrator():
 		if self.gamma != 0.0:
 			image = np.power(image, 1.0/self.gamma)
 		if self.subtractionPercent != 0:
-			bands = np.split(image, 3, axis=2)
-			bands[self.subtractionFromBand-1] = bands[self.subtractionFromBand-1] - (bands[self.subtractionSourceBand-1] * (self.subtractionPercent/100))
-			image = np.dstack(bands)
+			image[:,:,self.subtractionFromBand-1] = image[:,:,self.subtractionFromBand-1] - (image[:,:,self.subtractionSourceBand-1] * (self.subtractionPercent/100))
 			image[ image < 0] = 0.0
 		return image
 

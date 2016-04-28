@@ -161,9 +161,9 @@ class RadiometricCalibrationDialog(QtWidgets.QWidget, CALIBRATION_WIDGET):
 			self.addRoiToTable(roi)
 
 	def plotModel(self, theModel):
-		self.mplWidgetRed.plotModel(theModel['1'], 'red')
-		self.mplWidgetGreen.plotModel(theModel['2'], 'green')
-		self.mplWidgetBlue.plotModel(theModel['3'], 'blue')
+		self.mplWidgetRed.plotModel(theModel[0], 'red')
+		self.mplWidgetGreen.plotModel(theModel[1], 'green')
+		self.mplWidgetBlue.plotModel(theModel[2], 'blue')
 
 	def recordRubberBand(self, theRect, fromScenePoint, toSceenPoint):
 		if theRect.width() == 0 and theRect.height() == 0:
