@@ -49,8 +49,8 @@ class MplLinearRegressionCanvas(MplCanvas):
 		self.plot.plot(theModelBand['data']['x'], theModelBand['data']['y'], 'gs', theModelBand['data']['x'], y, color=theColor, linewidth=2)
 		self.plot.set_title('R-value: '+str(theModelBand['r-value']))
 		self.plot.locator_params(nbins=5)
-		self.plot.set_xlim(xmin=0)
-		self.plot.set_ylim(ymin=0)
+		self.plot.set_xlim(xmin=0, xmax=1)
+		self.plot.set_ylim(ymin=0, ymax=1)
 		self.draw()
 
 

@@ -85,9 +85,6 @@ class CalibrationIndiciesProcessor():
 				percentOfRange = (data - self.currentMin) / (self.currentMax - self.currentMin)
 				data = (self.scaleFrom * (1 - percentOfRange)) + (self.scaleTo * percentOfRange)
 			
-			#data = data.astype('int16')
-			#print(np.unique(data, return_counts=True))
-
 			#Set dtype
 			if self.scaleTo == 1:
 				if data.dtype.name != 'float32':
@@ -119,8 +116,8 @@ class CalibrationIndiciesProcessor():
 			#Transfer EXIF data to new file
 			outExif = pyexiv2.metadata.ImageMetadata(theDestinationDir+'/'+baseName)
 			outExif.read()
-			inExif.copy(outExif, comment=False)
-			outExif.write()
+			#inExif.copy(outExif, comment=False)
+			#outExif.write()
 
 			#Log and progress
 			progress += 1
