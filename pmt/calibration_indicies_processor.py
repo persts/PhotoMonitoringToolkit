@@ -33,13 +33,15 @@ class CalibrationIndiciesProcessor():
 		self.lut = 'None'
 		self.redBand = 1
 		self.nirBand = 3
+		self.currentMin = 0
+		self.currentMax = 255
 	
-	def indexDefault(self, theImage):
-		return theImage
-
 	def indexNdvi(self, theImage):
+		#Put each band into its own array
 		bands = np.split(theImage, 3, axis=2)
 		image = (bands[self.nirBand - 1] - bands[self.redBand - 1]) / (bands[self.nirBand - 1] + bands[self.redBand - 1])
+		self.currentMin = -1.0
+		self.currentMax = 1.0
 		return image
 
 	def log(self, theMessage, **kwargs):
@@ -62,7 +64,8 @@ class CalibrationIndiciesProcessor():
 		progress = 0
 		for file in fileList:
 			#Load image
-			data = io.imread(file)
+			data = io.imread(file).astype('float')
+			self.currentMax = 0
 
 			#Load original EXIF data
 			inExif = pyexiv2.metadata.ImageMetadata(file)
@@ -71,17 +74,20 @@ class CalibrationIndiciesProcessor():
 			#Radiometric Calibration
 			if self.radiometricCalibrator != None and self.radiometricCalibration:
 				data = self.radiometricCalibrator.calibrate(data)
+				self.currentMax = 1
 
 			#compute index
-			index = self.indexDefault
 			if self.index == 'NDVI':
-				index = self.indexNdvi
-			data = index(data)
+				data = self.indexNdvi(data)
 
 			#Scale
-			dataRange = self.scaleTo - self.scaleFrom
-			data = (data * dataRange) + self.scaleFrom
+			if self.currentMax != 0:
+				percentOfRange = (data - self.currentMin) / (self.currentMax - self.currentMin)
+				data = (self.scaleFrom * (1 - percentOfRange)) + (self.scaleTo * percentOfRange)
 			
+			#data = data.astype('int16')
+			#print(np.unique(data, return_counts=True))
+
 			#Set dtype
 			if self.scaleTo == 1:
 				if data.dtype.name != 'float32':

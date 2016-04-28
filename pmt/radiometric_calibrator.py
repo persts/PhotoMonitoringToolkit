@@ -39,11 +39,14 @@ class RadiometricCalibrator():
 	def calibrate(self, theImage):
 		if self.model == None:
 			return theImage
-		image = theImage.astype('float32')
-		image = self.preprocessPixels(image)
-		image[0] = (self.model['1']['slope'] * image[0]) + self.model['1']['intercept']
-		image[1] = (self.model['2']['slope'] * image[1]) + self.model['2']['intercept']
-		image[2] = (self.model['3']['slope'] * image[2]) + self.model['3']['intercept']
+		image = self.preprocessPixels(theImage)
+		bands = np.split(image, 3, axis=2)
+		bands[0] = (self.model['1']['slope'] * bands[0]) + self.model['1']['intercept']
+		bands[1] = (self.model['2']['slope'] * bands[1]) + self.model['2']['intercept']
+		bands[2] = (self.model['3']['slope'] * bands[2]) + self.model['3']['intercept']
+		image = np.dstack(bands)
+		image[ image < 0] = 0.0
+		image[ image > 1.0] = 1.0
 		return image
 
 	def generateModel(self):
@@ -53,12 +56,13 @@ class RadiometricCalibrator():
 			for roi in self.rois:
 				#If the width is not 0 we have means for the roi, so process
 				if roi[2][2] != 0:
-					stack = self.preprocessPixels(np.stack([[roi[3][0]], [roi[3][1]], [roi[3][2]]]))
-					self.model['1']['data']['x'].append(stack[0][0]) #X: pixel mean
+					array = np.reshape(np.array(roi[3]), (1,1,3))
+					stack = self.preprocessPixels(array)
+					self.model['1']['data']['x'].append(stack[0,0,0]) #X: pixel mean
 					self.model['1']['data']['y'].append(roi[1][0]) #Y: calibration
-					self.model['2']['data']['x'].append(stack[1][0])
+					self.model['2']['data']['x'].append(stack[0,0,1])
 					self.model['2']['data']['y'].append(roi[1][1])
-					self.model['3']['data']['x'].append(stack[2][0])
+					self.model['3']['data']['x'].append(stack[0,0,2])
 					self.model['3']['data']['y'].append(roi[1][2])
 			if len(self.model['1']['data']['x']) > 1:
 				self.model['1']['slope'], self.model['1']['intercept'], self.model['1']['r-value'], _, _ = LinearRegression(self.model['1']['data']['x'], self.model['1']['data']['y'])
@@ -108,13 +112,15 @@ class RadiometricCalibrator():
 		return True
 
 	def preprocessPixels(self, theImage):
-		result = (1.0/(self.maxPixelValue - self.minPixelValue)) * (theImage - self.minPixelValue)
+		image = (1.0/(self.maxPixelValue - self.minPixelValue)) * (theImage - self.minPixelValue)
 		if self.gamma != 0.0:
-			result = np.power(result, 1.0/self.gamma)
+			image = np.power(image, 1.0/self.gamma)
 		if self.subtractionPercent != 0:
-			result[self.subtractionFromBand-1] = result[self.subtractionFromBand-1] - (result[self.subtractionSourceBand-1] * (self.subtractionPercent/100))
-			result[ result < 0] = 0.0
-		return result
+			bands = np.split(image, 3, axis=2)
+			bands[self.subtractionFromBand-1] = bands[self.subtractionFromBand-1] - (bands[self.subtractionSourceBand-1] * (self.subtractionPercent/100))
+			image = np.dstack(bands)
+			image[ image < 0] = 0.0
+		return image
 
 	def save(self):
 		#Make new calibration record to save in EXIF data

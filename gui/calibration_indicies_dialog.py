@@ -77,6 +77,7 @@ class CalibrationIndiciesDialog(QtWidgets.QWidget, INDICIES_WIDGET):
 		self.textBrowser.append(datetime.datetime.now().isoformat()+': '+theMessage)
 
 	def run(self):
+		self.progressBar.setValue(0)
 		self.processor.process(self.source, self.destination)
 
 	def setDestination(self):
@@ -135,4 +136,6 @@ class CalibrationIndiciesDialog(QtWidgets.QWidget, INDICIES_WIDGET):
 
 	def updateFileExtension(self):
 		self.fileExtension = self.lineEditFileExtension.text()
-		getFileCount()
+		if self.source != '':
+			self.log('[ '+str(self.getFileCount())+' ] '+self.fileExtension+' files found in '+self.source)
+			
