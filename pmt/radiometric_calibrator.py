@@ -19,7 +19,7 @@
 import sys, os, math
 import numpy as np
 import pyexiv2, json
-from PIL import Image
+import cv2
 from scipy.stats import linregress as LinearRegression
 
 class RadiometricCalibrator():
@@ -88,14 +88,13 @@ class RadiometricCalibrator():
 	def loadImage(self, theImage):
 		self.rois = []
 		try:
-			self.image = Image.open(theImage)
+			self.image = cv2.imread(theImage)
+			self.image = cv2.cvtColor(self.image, cv2.COLOR_BGR2RGB)
 		except IOError:
 			self.image = None
 			return False
-		maxValue = -1
 		#Get max pixel value
-		for minMax in self.image.getextrema():
-			maxValue = max(maxValue, minMax[1])
+		maxValue = np.max(self.image)
 		if maxValue < 255:
 			self.maxValue = 255
 		else:
@@ -127,8 +126,7 @@ class RadiometricCalibrator():
 			path, baseName = os.path.split(self.fileName)
 			baseName = baseName.split('.')[0] + '-calibration.jpg'
 			fileName = os.path.join(path, baseName)
-			#TODO: Check the self.maxValue to determine 8 or 16-bit then pick format
-			self.image.save(fileName, 'jpeg', quality=95)
+			cv2.imwrite(fileName, cv2.cvtColor(self.image, cv2.COLOR_RGB2BGR))
 			#Transfer EXIF data to new file and reload
 			outExif = pyexiv2.metadata.ImageMetadata(fileName)
 			outExif.read()

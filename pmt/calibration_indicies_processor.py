@@ -18,9 +18,9 @@
 # along with PMT.  If not, see <http://www.gnu.org/licenses/>.
 import glob, re, os
 import numpy as np
+import cv2
 import pyexiv2
-from skimage import io
-from skimage.external.tifffile import TiffWriter
+from tifffile import TiffWriter
 
 class CalibrationIndiciesProcessor():
 	def __init__(self, theCalibrator=None):
@@ -64,7 +64,8 @@ class CalibrationIndiciesProcessor():
 		progress = 0
 		for file in fileList:
 			#Load image
-			data = io.imread(file).astype('float')
+			data = cv2.cvtColor(cv2.imread(file), cv2.COLOR_BGR2RGB)
+			data = data.astype('float')
 			self.currentMax = 0
 
 			#Load original EXIF data

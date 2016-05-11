@@ -35,8 +35,7 @@ class RadiometricCalibratorQt(QtCore.QObject, RadiometricCalibrator):
 			self.modelCreated.emit(self.model)
 	def loadImage(self, theImage):
 		if RadiometricCalibrator.loadImage(self, theImage):
-			imageArray = np.array(self.image)
-			qImage = QtGui.QImage(imageArray, imageArray.shape[1], imageArray.shape[0], QtGui.QImage.Format_RGB888)
+			qImage = QtGui.QImage(self.image, self.image.shape[1], self.image.shape[0], QtGui.QImage.Format_RGB888)
 			self.pixmapCreated.emit(QtGui.QPixmap.fromImage(qImage))
 			self.roisLoaded.emit(self.rois)
 		else:
